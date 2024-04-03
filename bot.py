@@ -38,6 +38,15 @@ async def ping(interaction: discord.Interaction):
     embed = discord.Embed(title="Pong!", description=f"Delay: {round(bot.latency*1000)} ms", color=0xFFFFFF)
     await interaction.response.send_message(embed=embed)
 
+@bot.tree.command(
+    name="push",
+    description="push score data to your google sheet",
+    guild=discord.Object(id=1007625110083076146)
+)
+async def push(interaction: discord.Interaction):
+    embed = discord.Embed(title="Pushed!", description=f"Your score data is pushed on your google sheet", color=0xFFFFFF)
+    await interaction.response.send_message(embed=embed)
+
 @bot.event
 async def on_message(message):
     if message.content.startswith("<@1211203828335247410>"):
