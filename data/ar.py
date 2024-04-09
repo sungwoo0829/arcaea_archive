@@ -15,9 +15,9 @@ def createDirectory(directory):
 
 wb = Workbook()
 wr= wb.active
-wr.append(["song","artist","difficulty","note","bp","version","img"])
+wr.append(["song","artist","pack","difficulty","note","bp","version","img"])
 
-headers = {"User-Agent":"Mozilla/5.1 (Windows NT 10.0; Win64; x64) AppleWebKit/537.35 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"}
+headers = {"User-Agent":"Mozilla/5.2 (Windows NT 10.0; Win64; x64) AppleWebKit/537.35 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"}
 
 url = "https://wikiwiki.jp/arcaea/%E3%82%BF%E3%82%A4%E3%83%88%E3%83%AB%E9%A0%86"
 res = requests.get(url,headers=headers)
@@ -45,17 +45,20 @@ for k in range(len(basetable)):
         res1.raise_for_status()
         soup1 = BeautifulSoup(res1.text, "lxml")
 
-        tables = soup1.find_all("table")
+        tables1 = soup1.find_all("table")
+        tables=[]
 
-        trash=[]
+        for tb1 in tables1:
+            if ".png" in str(tb1.find_all("img")):
+                pass
+            elif len(tb1.find_all("img"))>0:
+                if "fold-container" in str(tb1.find_parent().find_parent()):
+                    pass
+                elif "ゲーム内に記載なし" in str(tb1):
+                    pass
+                elif len(tb1.find_all("tr"))>1:
+                    tables.append(tb1)
 
-        for fcs in soup1.find_all(attrs={"class":"fold-container clearfix"}):
-            for ats in fcs.find_all("table"):
-                trash.append(ats)
-        for fcs in soup1.find_all(attrs={"class":"fold-container clearfix fold-open"}):
-            for ats in fcs.find_all("table"):
-                trash.append(ats)
-        tables=tables[:len(tables)-len(trash)]
 
 
         p = re.compile("譜面定数 : \d+[.]\d+")
@@ -72,10 +75,14 @@ for k in range(len(basetable)):
 
         artist=str(a[0]).split(">")[1].replace("</a","")
 
-        try:
-            pack=str(a[3]).split(">")[1].replace("</a","").split("<")[0].split(":")[0]
-        except:
-            pack=str(a[-1]).split(">")[1].replace("</a","").split("<")[0].split(":")[0]
+        if len(a)<8:
+            try:
+                pack=str(a[3]).split(">")[1].replace("</a","").split("<")[0].split(":")[0]
+            except:
+                pack=str(a[-1]).split(">")[1].replace("</a","").split("<")[0].split(":")[0]
+        else:
+            pack=pack=str(a[-2]).split(">")[1].replace("</a","").split("<")[0].split(":")[0]
+
 
         trs=mt.find_all("tr")
         notes=trs[4].find_all("td")
@@ -90,9 +97,9 @@ for k in range(len(basetable)):
             future_note=str(notes[2]).split(">")[1].replace("</td","")
             version=str(trs[-2].find_all("td")[0]).split(">")[1].replace("<br class=\"spacer\"/","").replace("ver.","")
         
-            past=[artist,"PST",past_note,past_bp,version]
-            present=[artist,"PRS",present_note,present_bp,version]
-            future=[artist,"FTR",future_note,future_bp,version]
+            past=[artist,"PST",pack,past_note,past_bp,version]
+            present=[artist,"PRS",pack,present_note,present_bp,version]
+            future=[artist,"FTR",pack,future_note,future_bp,version]
 
         if len(rbp)>=4:
             beyond_bp=rbpp[3]
@@ -101,18 +108,18 @@ for k in range(len(basetable)):
             version=str(trs[-2].find_all("td")[0]).split(">")[1].replace("<br class=\"spacer\"/","").replace("ver.","")
         
             if "Beyond" in str(soup1):
-                beyond=[artist,"BYD",beyond_note,beyond_bp,version]
+                beyond=[artist,"BYD",pack,beyond_note,beyond_bp,version]
             else:
-                beyond=[artist,"ETR",beyond_note,beyond_bp,version]
+                beyond=[artist,"ETR",pack,beyond_note,beyond_bp,version]
         if len(rbp)==5:
             beyond2_bp=rbpp[4]
 
             beyond2_note=str(notes[4]).split(">")[1].replace("</td","")
             version=str(trs[-2].find_all("td")[0]).split(">")[1].replace("<br class=\"spacer\"/","").replace("ver.","")
 
-            beyond2=[artist,"BYD",beyond2_note,beyond2_bp,version]
+            beyond2=[artist,"BYD",pack,beyond2_note,beyond2_bp,version]
 
-        if len(tables) ==2:
+        if len(tables) ==1:
 
             img=mt.find_all("img")[0]
             title=img.get("title")
@@ -132,14 +139,14 @@ for k in range(len(basetable)):
                 beyond=[title]+beyond+[img_link.split("/")[-1]]
                 wr.append(beyond) 
 
-        elif len(tables)==5:
+        elif len(tables)==4:
             i=0
             ppf=[]
             if len(rbp)==3:
                 ppf=[past,present,future]
             elif len(rbp)==5:
                 ppf=[[past,present,future],beyond,beyond2]
-            for t in tables[2:]:
+            for t in tables[1:]:
 
                 img=t.find_all("img")[0]
                 title=img.get("title")
@@ -147,29 +154,40 @@ for k in range(len(basetable)):
                 img_link = img_url.split("jpg")[0]+"jpg"
                 createDirectory("jacket/"+pack)
                 Image.open(requests.get(img_link, stream=True).raw).save("jacket/"+pack+"/"+img_link.split("/")[-1])
-                if len(ppf[i])==1:
-                    wr.append([title]+ppf[i]+[img_link.split("/")[-1]])
+                if len(ppf[i])==5:
+                    if type(img_link)=="list":
+                        wr.append([title]+ppf[i]+[img_link[i].split("/")[-1]])
+                    else:
+                        wr.append([title]+ppf[i]+[img_link.split("/")[-1]])
                 else:
                     for pp in ppf[i]:
-                        wr.append([title]+pp+[img_link.split("/")[-1]])
+                        if type(img_link)=="list":
+                            wr.append([title]+pp+[img_link[i].split("/")[-1]])
+                        else:
+                            wr.append([title]+pp+[img_link.split("/")[-1]])
                 i=i+1
 
-        elif len(tables)==4:
+        elif len(tables)==3:
             i=0
             ppf=[[past,present,future],beyond]
-            for t in tables[2:]:
+            for t in tables[1:]:
                 img=t.find_all("img")[0]
                 title=img.get("title")
                 img_url=img.get("src")
                 img_link = img_url.split("jpg")[0]+"jpg"
                 createDirectory("jacket/"+pack)
                 Image.open(requests.get(img_link, stream=True).raw).save("jacket/"+pack+"/"+img_link.split("/")[-1])
-                if len(ppf[i])==1:
-                    wr.append([title]+ppf[i]+[img_link.split("/")[-1]])
+                if len(ppf[i])==5:
+                    if type(img_link)=="list":
+                        wr.append([title]+ppf[i]+[img_link[i].split("/")[-1]])
+                    else:
+                        wr.append([title]+ppf[i]+[img_link.split("/")[-1]])
                 else:
                     for pp in ppf[i]:
-                        print(img_link)
-                        wr.append([title]+pp+[img_link.split("/")[-1]])
+                        if type(img_link)=="list":
+                            wr.append([title]+pp+[img_link[i].split("/")[-1]])
+                        else:
+                            wr.append([title]+pp+[img_link.split("/")[-1]])
                 i=i+1
 
     
