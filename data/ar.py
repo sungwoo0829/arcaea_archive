@@ -69,23 +69,34 @@ for k in range(len(basetable)):
 
             rbpp.append(re.compile("\d+[.]\d+").findall(x)[0])
         
-
         mt=tables[0]
+
+        trs=mt.find_all("tr")
+
+        for tr in trs:
+            tp=tr.find_all("th")[0].string
+            if tp == "Composer":
+                artist=tr.find_all("td")[0].text
+            
+
+        notes=trs[4].find_all("td")
+
+
+
         a=mt.find_all("a",attrs={"class":"rel-wiki-page"})
 
-        artist=str(a[0]).split(">")[1].replace("</a","")
+        artist=a[0].string
 
         if len(a)<8:
             try:
-                pack=str(a[3]).split(">")[1].replace("</a","").split("<")[0].split(":")[0]
+                pack=a[3].text.split(":")[0]
             except:
                 pack=str(a[-1]).split(">")[1].replace("</a","").split("<")[0].split(":")[0]
         else:
-            pack=pack=str(a[-2]).split(">")[1].replace("</a","").split("<")[0].split(":")[0]
+            pack=str(a[-2]).split(">")[1].replace("</a","").split("<")[0].split(":")[0]
 
 
-        trs=mt.find_all("tr")
-        notes=trs[4].find_all("td")
+        
 
         if len(rbp)>=3:
             past_bp=rbpp[0]
