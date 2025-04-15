@@ -17,7 +17,7 @@ wb = Workbook()
 wr= wb.active
 wr.append(["song","artist","pack","difficulty","note","bp","version","img"])
 
-headers = {"User-Agent":"Mozilla/5.2 (Windows NT 10.0; Win64; x64) AppleWebKit/537.35 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"}
+headers = {"User-Agent":"Mozilla/5.1 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"}
 
 url = "https://wikiwiki.jp/arcaea/%E3%82%BF%E3%82%A4%E3%83%88%E3%83%AB%E9%A0%86"
 res = requests.get(url,headers=headers)
@@ -26,11 +26,15 @@ soup = BeautifulSoup(res.text, 'lxml')
 
 basetable = soup.find_all('table')
 
+
+#a=0
+
 for k in range(len(basetable)):
     if k==0:
         tds=[]
     else:
         tds=basetable[k].find_all('a',attrs={"class":"rel-wiki-page"})
+
 
     for td in tds:
         print(td)
@@ -41,6 +45,12 @@ for k in range(len(basetable)):
         beyond2=[]
 
         link = td.get('href')
+
+        #if link=="/arcaea/Ultimate%20taste":
+        #    a=1
+        #if a==0:
+        #    continue
+
         res1 = requests.get("https://wikiwiki.jp"+str(link),headers=headers)
         res1.raise_for_status()
         soup1 = BeautifulSoup(res1.text, "lxml")
@@ -72,12 +82,12 @@ for k in range(len(basetable)):
         mt=tables[0]
 
         trs=mt.find_all("tr")
-
+        """
         for tr in trs:
             tp=tr.find_all("th")[0].string
             if tp == "Composer":
                 artist=tr.find_all("td")[0].text
-            
+        """  
 
         notes=trs[4].find_all("td")
 
@@ -165,6 +175,7 @@ for k in range(len(basetable)):
                 img_link = img_url.split("jpg")[0]+"jpg"
                 createDirectory("jacket/"+pack)
                 Image.open(requests.get(img_link, stream=True).raw).save("jacket/"+pack+"/"+img_link.split("/")[-1])
+                """
                 if len(ppf[i])==5:
                     if type(img_link)=="list":
                         wr.append([title]+ppf[i]+[img_link[i].split("/")[-1]])
@@ -176,6 +187,7 @@ for k in range(len(basetable)):
                             wr.append([title]+pp+[img_link[i].split("/")[-1]])
                         else:
                             wr.append([title]+pp+[img_link.split("/")[-1]])
+                            """
                 i=i+1
 
         elif len(tables)==3:
@@ -188,6 +200,7 @@ for k in range(len(basetable)):
                 img_link = img_url.split("jpg")[0]+"jpg"
                 createDirectory("jacket/"+pack)
                 Image.open(requests.get(img_link, stream=True).raw).save("jacket/"+pack+"/"+img_link.split("/")[-1])
+                """
                 if len(ppf[i])==5:
                     if type(img_link)=="list":
                         wr.append([title]+ppf[i]+[img_link[i].split("/")[-1]])
@@ -199,6 +212,7 @@ for k in range(len(basetable)):
                             wr.append([title]+pp+[img_link[i].split("/")[-1]])
                         else:
                             wr.append([title]+pp+[img_link.split("/")[-1]])
+                            """
                 i=i+1
 
     
